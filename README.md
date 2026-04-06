@@ -6,25 +6,27 @@
 * **Backend (Render):** https://chat-app-backend-pci2.onrender.com
 
 ---
+
+```bash
 fullstack-chat-app/
-├── backend/                # Node.js & Express Server
-│   ├── models/             # Mongoose schemas (Data modeling)
-│   │   └── Message.js      # Message, timestamp, and status fields
-│   ├── index.js            # Entry point: API routes & Socket.io logic
-│   ├── .env                # Environment variables (Database URI)
-│   └── package.json        # Backend dependencies (Socket.io, Mongoose, Cors)
+├── backend/                
+│   ├── models/             
+│   │   └── Message.js      
+│   ├── index.js            
+│   ├── .env                
+│   └── package.json        
 │
-├── frontend/               # Next.js & React Application
+├── frontend/               
 │   ├── src/
 │   │   └── app/
-│   │       ├── page.js     # Main Chat UI, Socket listeners, & State logic
-│   │       └── globals.css # Tailwind CSS global styles
-│   ├── public/             # Static assets (icons, images)
-│   ├── tailwind.config.js  # Styling configurations
-│   └── package.json        # Frontend dependencies (Lucide-react, Socket.io-client)
+│   │       ├── page.js     
+│   │       └── globals.css 
+│   ├── public/             
+│   ├── tailwind.config.js  
+│   └── package.json        
 │
-└── README.md               # Project documentation  
-
+└── README.md               
+```
     
 ## 📌 Project Overview
 This application allows multiple users to join a global chat room and communicate in real-time without needing to refresh the page. 
