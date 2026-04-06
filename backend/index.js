@@ -3,6 +3,7 @@ const http = require('http');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const Message = require('./models/Message');
 require('dotenv').config();
 
 // Initialize the Express app and HTTP server
@@ -35,6 +36,19 @@ io.on('connection', (socket) => {
   });
 });
 
+// Route to get all messages
+app.get('/api/messages', async (req, res) => {
+    const messages = await Message.find().sort({ timestamp: 1 });
+    res.json(messages);
+  });
+  
+  // Route to send a message
+  app.post('/api/messages', async (req, res) => {
+    const newMessage = new Message(req.body);
+    await newMessage.save();
+    io.emit('messageReceived', newMessage); // Broadcast to everyone
+    res.status(201).json(newMessage);
+  });
 // A simple test route
 app.get('/', (req, res) => {
   res.send('Chat App Backend is running...');
