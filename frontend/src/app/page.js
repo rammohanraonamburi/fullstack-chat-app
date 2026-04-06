@@ -9,10 +9,13 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Generate a fake "User ID" for this specific browser session
-  const [userId] = useState(() => Math.random().toString(36).substr(2, 9));
+  // Start empty to prevent Hydration Errors, then generate on client mount
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
+    // Generate a unique session ID for this browser tab
+    setUserId(Math.random().toString(36).substr(2, 9));
+
     fetchMessages();
 
     socket.on('messageReceived', (newMessage) => {
@@ -37,7 +40,7 @@ export default function Home() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !userId) return;
 
     await fetch('http://localhost:5001/api/messages', {
       method: 'POST',
@@ -52,100 +55,127 @@ export default function Home() {
     await fetch(`http://localhost:5001/api/messages/${id}/pin`, { method: 'PATCH' });
   };
 
-  // NEW: Delete for Everyone
   const deleteForEveryone = async (id) => {
     await fetch(`http://localhost:5001/api/messages/${id}/deleteForEveryone`, { method: 'PATCH' });
   };
 
-  // NEW: Delete for Me
   const deleteForMe = async (id) => {
     await fetch(`http://localhost:5001/api/messages/${id}/deleteForMe`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     });
-    // Immediately hide it locally without waiting for a socket event
     setMessages((prev) => prev.map(m => m._id === id ? { ...m, hiddenBy: [...(m.hiddenBy || []), userId] } : m));
   };
 
-  // Filter out messages hidden by THIS specific user, AND apply search
+  // Filter hidden and searched messages
   const visibleMessages = messages
     .filter((msg) => !(msg.hiddenBy || []).includes(userId))
     .filter((msg) => msg.content.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 font-sans">
-      <header className="bg-white shadow-md p-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="flex flex-col h-screen bg-gray-50 font-sans">
+      
+      {/* Header */}
+      <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col">
             <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight">ChatApp</h1>
-            <span className="text-xs text-gray-400">Your Session ID: {userId}</span>
+            <span className="text-xs text-gray-400">Your Session ID: {userId || 'loading...'}</span>
           </div>
           <input
             type="text"
             placeholder="Search messages..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-64 p-2 border border-gray-300 rounded-full px-4 focus:ring-2 focus:ring-blue-400 outline-none text-sm"
+            className="w-full md:w-64 p-2 border border-gray-200 rounded-full px-4 focus:ring-2 focus:ring-blue-400 outline-none text-sm bg-gray-50"
           />
         </div>
       </header>
 
+      {/* Pinned Indicator */}
       <div className="bg-yellow-50 border-b border-yellow-200 p-2 text-center text-xs font-semibold text-yellow-800">
         📌 {visibleMessages.filter(m => m.isPinned && !m.deletedForEveryone).length} Pinned Messages
       </div>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 max-w-4xl mx-auto w-full">
+      {/* Message Area */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 max-w-5xl mx-auto w-full">
         {visibleMessages.length > 0 ? (
-          visibleMessages.map((msg) => (
-            <div 
-              key={msg._id} 
-              className={`group relative p-4 rounded-2xl transition-all duration-200 ${
-                msg.deletedForEveryone ? 'bg-gray-200 border border-gray-300 opacity-70' :
-                msg.isPinned ? 'bg-yellow-100 border-2 border-yellow-300 shadow-sm' : 'bg-white shadow-sm hover:shadow-md'
-              }`}
-            >
-              <p className={`text-gray-800 leading-relaxed ${msg.deletedForEveryone ? 'italic text-gray-500' : ''}`}>
-                {msg.content}
-              </p>
-              
-              <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100 italic">
-                <span className="text-[10px] text-gray-400">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+          visibleMessages.map((msg) => {
+            const isMine = msg.sender === userId;
+            const isDeleted = msg.deletedForEveryone;
+            const isPinned = msg.isPinned;
+
+            return (
+              <div key={msg._id} className={`flex w-full ${isMine ? 'justify-end' : 'justify-start'}`}>
                 
-                {/* Hide action buttons if the message is already deleted for everyone */}
-                {!msg.deletedForEveryone && (
-                  <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => togglePin(msg._id)} className="text-blue-500 text-xs font-medium hover:text-blue-700">
-                      {msg.isPinned ? 'Unpin' : 'Pin'}
-                    </button>
-                    <button onClick={() => deleteForMe(msg._id)} className="text-orange-400 text-xs font-medium hover:text-orange-600">
-                      Delete for Me
-                    </button>
-                    <button onClick={() => deleteForEveryone(msg._id)} className="text-red-500 text-xs font-medium hover:text-red-700">
-                      Delete for Everyone
-                    </button>
+                {/* Chat Bubble */}
+                <div 
+                  className={`group relative p-4 max-w-[85%] md:max-w-[70%] transition-all duration-200 
+                    ${isMine ? 'rounded-2xl rounded-tr-sm' : 'rounded-2xl rounded-tl-sm'} 
+                    ${isDeleted ? 'bg-gray-200 border border-gray-300 opacity-70 text-gray-500 italic' : 
+                      isPinned ? 'bg-yellow-100 border-2 border-yellow-400 text-gray-800 shadow-sm' : 
+                      isMine ? 'bg-blue-600 text-white shadow-md' : 'bg-white border border-gray-100 shadow-sm text-gray-800'
+                    }`}
+                >
+                  
+                  {/* Pinned Badge */}
+                  {isPinned && !isDeleted && (
+                    <div className="absolute -top-2 -right-2 text-xl drop-shadow-md">📌</div>
+                  )}
+
+                  {/* Message Content */}
+                  <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                  
+                  {/* Meta Data & Action Buttons */}
+                  <div className={`flex flex-wrap justify-between items-center mt-2 pt-2 border-t text-[10px] sm:text-xs italic 
+                    ${isMine && !isPinned && !isDeleted ? 'border-blue-500/50 text-blue-200' : 'border-gray-200 text-gray-400'}`}>
+                    
+                    <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    
+                    {!isDeleted && (
+                      <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                        <button 
+                          onClick={() => togglePin(msg._id)} 
+                          className={`font-medium hover:underline ${isMine && !isPinned ? 'hover:text-white' : 'text-blue-500 hover:text-blue-700'}`}
+                        >
+                          {isPinned ? 'Unpin' : 'Pin'}
+                        </button>
+                        <button 
+                          onClick={() => deleteForMe(msg._id)} 
+                          className={`font-medium hover:underline ${isMine && !isPinned ? 'hover:text-orange-200' : 'text-orange-400 hover:text-orange-600'}`}
+                        >
+                          Delete for Me
+                        </button>
+                        <button 
+                          onClick={() => deleteForEveryone(msg._id)} 
+                          className={`font-medium hover:underline ${isMine && !isPinned ? 'hover:text-red-200' : 'text-red-500 hover:text-red-700'}`}
+                        >
+                          Delete for Everyone
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="text-center py-20 text-gray-400">No messages found.</div>
+          <div className="text-center py-20 text-gray-400">No messages yet. Say hello!</div>
         )}
       </main>
 
-      <footer className="bg-white border-t p-4">
-        <form onSubmit={sendMessage} className="max-w-4xl mx-auto flex gap-3">
+      {/* Input Area */}
+      <footer className="bg-white border-t p-4 shrink-0">
+        <form onSubmit={sendMessage} className="max-w-5xl mx-auto flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Write a message..."
-            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Type your message..."
+            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
           />
-          <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+          <button type="submit" disabled={!input.trim()} className="bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-200 active:scale-95">
             Send
           </button>
         </form>
