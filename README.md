@@ -6,23 +6,23 @@
 * **Backend (Render):** https://chat-app-backend-pci2.onrender.com
 
 ---
-fullstack-chat-app/        
+fullstack-chat-app/
+├── backend/                # Node.js & Express Server
+│   ├── models/             # Mongoose schemas (Data modeling)
+│   │   └── Message.js      # Message, timestamp, and status fields
+│   ├── index.js            # Entry point: API routes & Socket.io logic
+│   ├── .env                # Environment variables (Database URI)
+│   └── package.json        # Backend dependencies (Socket.io, Mongoose, Cors)
 │
-├── backend/                
-│   ├── models/
-│   │   └── Message.js      
-│   ├── node_modules/       
-│   ├── .env                
-│   ├── index.js            
-│   └── package.json       
-│
-└── frontend/             
-    ├── src/
-    │   └── app/
-    │       ├── globals.css 
-    │       └── page.js     
-    ├── node_modules/       
-    └── package.json      
+├── frontend/               # Next.js & React Application
+│   ├── src/
+│   │   └── app/
+│   │       ├── page.js     # Main Chat UI, Socket listeners, & State logic
+│   │       └── globals.css # Tailwind CSS global styles
+│   ├── public/             # Static assets (icons, images)
+│   ├── tailwind.config.js  # Styling configurations
+│   └── package.json        # Frontend dependencies (Lucide-react, Socket.io-client)
+└── README.md               # Project documentation     
 
     
 ## 📌 Project Overview
