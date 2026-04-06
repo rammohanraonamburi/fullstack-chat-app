@@ -2,18 +2,16 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5001');
+const socket = io('https://chat-app-backend-pci2.onrender.com');
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Start empty to prevent Hydration Errors, then generate on client mount
   const [userId, setUserId] = useState('');
 
   useEffect(() => {
-    // Generate a unique session ID for this browser tab
     setUserId(Math.random().toString(36).substr(2, 9));
 
     fetchMessages();
@@ -33,7 +31,7 @@ export default function Home() {
   }, []);
 
   const fetchMessages = async () => {
-    const res = await fetch('http://localhost:5001/api/messages');
+    const res = await fetch('https://chat-app-backend-pci2.onrender.com/api/messages');
     const data = await res.json();
     setMessages(data);
   };
@@ -42,7 +40,7 @@ export default function Home() {
     e.preventDefault();
     if (!input.trim() || !userId) return;
 
-    await fetch('http://localhost:5001/api/messages', {
+    await fetch('https://chat-app-backend-pci2.onrender.com/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: input, sender: userId }),
@@ -52,15 +50,15 @@ export default function Home() {
   };
 
   const togglePin = async (id) => {
-    await fetch(`http://localhost:5001/api/messages/${id}/pin`, { method: 'PATCH' });
+    await fetch(`https://chat-app-backend-pci2.onrender.com/api/messages/${id}/pin`, { method: 'PATCH' });
   };
 
   const deleteForEveryone = async (id) => {
-    await fetch(`http://localhost:5001/api/messages/${id}/deleteForEveryone`, { method: 'PATCH' });
+    await fetch(`https://chat-app-backend-pci2.onrender.com/api/messages/${id}/deleteForEveryone`, { method: 'PATCH' });
   };
 
   const deleteForMe = async (id) => {
-    await fetch(`http://localhost:5001/api/messages/${id}/deleteForMe`, {
+    await fetch(`https://chat-app-backend-pci2.onrender.com/api/messages/${id}/deleteForMe`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
@@ -68,7 +66,6 @@ export default function Home() {
     setMessages((prev) => prev.map(m => m._id === id ? { ...m, hiddenBy: [...(m.hiddenBy || []), userId] } : m));
   };
 
-  // Filter hidden and searched messages
   const visibleMessages = messages
     .filter((msg) => !(msg.hiddenBy || []).includes(userId))
     .filter((msg) => msg.content.toLowerCase().includes(searchQuery.toLowerCase()));
