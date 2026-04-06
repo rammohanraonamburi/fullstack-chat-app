@@ -59,10 +59,31 @@ app.patch('/api/messages/:id/pin', async (req, res) => {
   });
   
   // Route to Delete a message (Delete for Everyone)
-  app.delete('/api/messages/:id', async (req, res) => {
-    await Message.findByIdAndDelete(req.params.id);
-    io.emit('messageDeleted', req.params.id); // Tell everyone to remove it
-    res.status(204).send();
+// Route: Delete for Everyone (Marks as deleted)
+app.patch('/api/messages/:id/deleteForEveryone', async (req, res) => {
+    const message = await Message.findById(req.params.id);
+    message.deletedForEveryone = true;
+    message.content = "🚫 This message was deleted"; // Overwrite the content
+    message.isPinned = false; // Unpin it if it was pinned
+    await message.save();
+    
+    io.emit('messageUpdated', message); // Tell all screens to update this message
+    res.json(message);
+  });
+  
+  // Route: Delete for Me (Hides it for the specific user)
+  app.patch('/api/messages/:id/deleteForMe', async (req, res) => {
+    const { userId } = req.body;
+    const message = await Message.findById(req.params.id);
+    
+    // Add this user's ID to the hidden array
+    if (!message.hiddenBy.includes(userId)) {
+      message.hiddenBy.push(userId);
+      await message.save();
+    }
+    
+    res.json(message); 
+    // Notice we DON'T emit to everyone here, because it's only deleted for ONE person!
   });
 // A simple test route
 app.get('/', (req, res) => {
