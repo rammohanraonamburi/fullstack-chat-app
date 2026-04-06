@@ -6,7 +6,25 @@
 * **Backend (Render):** https://chat-app-backend-pci2.onrender.com
 
 ---
+fullstack-chat-app/        
+│
+├── backend/                
+│   ├── models/
+│   │   └── Message.js      
+│   ├── node_modules/       
+│   ├── .env                
+│   ├── index.js            
+│   └── package.json       
+│
+└── frontend/             
+    ├── src/
+    │   └── app/
+    │       ├── globals.css 
+    │       └── page.js     
+    ├── node_modules/       
+    └── package.json      
 
+    
 ## 📌 Project Overview
 This application allows multiple users to join a global chat room and communicate in real-time without needing to refresh the page. 
 
