@@ -2,8 +2,8 @@
 
 
 ### Live Demo
-* **Frontend (Vercel):** `https://fullstack-chat-app-ruby-five.vercel.app/`
-* **Backend (Render):** `https://chat-app-backend-pci2.onrender.com`
+* **Frontend (Vercel):** https://fullstack-chat-app-ruby-five.vercel.app/
+* **Backend (Render):** https://chat-app-backend-pci2.onrender.com
 
 ---
 
