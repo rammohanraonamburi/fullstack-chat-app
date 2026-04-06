@@ -22,7 +22,8 @@ fullstack-chat-app/
 │   ├── public/             # Static assets (icons, images)
 │   ├── tailwind.config.js  # Styling configurations
 │   └── package.json        # Frontend dependencies (Lucide-react, Socket.io-client)
-└── README.md               # Project documentation     
+│
+└── README.md               # Project documentation  
 
     
 ## 📌 Project Overview
