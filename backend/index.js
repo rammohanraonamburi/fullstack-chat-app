@@ -49,6 +49,21 @@ app.get('/api/messages', async (req, res) => {
     io.emit('messageReceived', newMessage); // Broadcast to everyone
     res.status(201).json(newMessage);
   });
+  // Route to Pin/Unpin a message
+app.patch('/api/messages/:id/pin', async (req, res) => {
+    const message = await Message.findById(req.params.id);
+    message.isPinned = !message.isPinned; // Toggle pin status
+    await message.save();
+    io.emit('messageUpdated', message); // Tell everyone it's pinned
+    res.json(message);
+  });
+  
+  // Route to Delete a message (Delete for Everyone)
+  app.delete('/api/messages/:id', async (req, res) => {
+    await Message.findByIdAndDelete(req.params.id);
+    io.emit('messageDeleted', req.params.id); // Tell everyone to remove it
+    res.status(204).send();
+  });
 // A simple test route
 app.get('/', (req, res) => {
   res.send('Chat App Backend is running...');
